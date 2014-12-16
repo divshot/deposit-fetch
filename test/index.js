@@ -31,7 +31,7 @@ var fetching = test('fetching:')
 
 fetching.test('skip if no url is provided', function (t) {
   
-  fetch({}, function (err, data) {
+  fetch()({}, function (err, data) {
     
     t.ok(err instanceof Error, 'returns error');
     t.equal(err.message, 'Url is required', 'error message');
@@ -46,7 +46,7 @@ detected.test('json', function (t) {
   var d = deposit();
   var expected = '<script>window.__data = {"default":true};</script>';
 
-  d.injector('fetch', fetch);
+  d.injector('fetch', fetch());
 
   fs.createReadStream(TEST1_FILE_PATH)
     .pipe(split())
@@ -67,7 +67,7 @@ detected.test('json', function (t) {
 
 detected.test('html', function (t) {
   
-  fetch({
+  fetch()({
     url: 'http://localhost:4321/detected-html'
   }, function (err, data) {
     
@@ -78,7 +78,7 @@ detected.test('html', function (t) {
 
 fetching.test('json default assignment value: window.__json', function (t) {
   
-  fetch({
+  fetch()({
     url: 'http://localhost:4321/json'
   }, function (err, data) {
     
@@ -89,7 +89,7 @@ fetching.test('json default assignment value: window.__json', function (t) {
 
 fetching.test('json', function (t) {
   
-  fetch({
+  fetch()({
     url: 'http://localhost:4321/json',
     type: 'application/json',
     assign: 'window.__response'
@@ -104,7 +104,7 @@ fetching.test('javascript', function (t) {
   
   var expected = '<script>console.log("javascript")</script>';
   
-  fetch({
+  fetch()({
     url: 'http://localhost:4321/js',
     type: 'application/javascript'
   }, function (err, data) {
@@ -116,7 +116,7 @@ fetching.test('javascript', function (t) {
 
 fetching.test('html', function (t) {
   
-  fetch({
+  fetch()({
     url: 'http://localhost:4321/html',
     type: 'text/html'
   }, function (err, data) {
@@ -128,7 +128,7 @@ fetching.test('html', function (t) {
 
 fetching.test('css', function (t) {
   
-  fetch({
+  fetch()({
     url: 'http://localhost:4321/css',
     type: 'text/css'
   }, function (err, data) {
@@ -142,7 +142,7 @@ var statusCodes = fetching.test('response status codes:');
 
 statusCodes.test('4xx returns default content', function (t) {
   
-  fetch({
+  fetch()({
     url: 'http://localhost:4321/not-found',
     default: 'default content'
   }, function (err, data) {

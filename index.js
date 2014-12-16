@@ -3,26 +3,29 @@ var mime = require('mime-types');
 
 var format = require('./lib/format');
 
-module.exports = function fetch (options, done) {
+module.exports = function (spec) {
   
-  if (!options.url) {
-    return done(new Error('Url is required'));
-  }
+  return function fetch (options, done) {
   
-  request.get(options.url, function (err, response, body) {
-    
-    if (err) {
-      return done(err);
+    if (!options.url) {
+      return done(new Error('Url is required'));
     }
     
-    if (response.statusCode >= 400) {
-      return done(null, options.default);
-    }
-    
-    var type = options.type || response.headers['content-type'];
-    var ext = mime.extension(type);
-    var data = format[ext](body, options);
-    
-    done(null, data);
-  });  
+    request.get(options.url, function (err, response, body) {
+      
+      if (err) {
+        return done(err);
+      }
+      
+      if (response.statusCode >= 400) {
+        return done(null, options.default);
+      }
+      
+      var type = options.type || response.headers['content-type'];
+      var ext = mime.extension(type);
+      var data = format[ext](body, options);
+      
+      done(null, data);
+    });  
+  };
 };

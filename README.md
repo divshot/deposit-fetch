@@ -18,7 +18,7 @@ var deposit = require('deposit');
 
 var d = deposit();
 
-d.injector('fetch', require('deposit-fetch'));
+d.injector('fetch', require('deposit-fetch')());
 
 http.createServer(function (req, res) {
 
@@ -67,7 +67,7 @@ http.createServer(function (req, res) {
 </html>
 ```
 
-##q Options
+## Injection Options
 
 * `url` - The url to fetch.
 * `assign` - OPTIONAL - The value to assign the response body to. This is only used if it is a JSON response. *html* responses are injected as is, *css* responses are wrapped in *style* tags, *javascript* responses are wrapped in *script* tags, and *json* responses are wrapped in script tags and assigned to value given in the *assign* options. If now value is set for *assign*, `window.__json` is used by default.
