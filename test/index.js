@@ -8,33 +8,10 @@ var concat = require('concat-stream');
 var express = require('express');
 
 var fetch = require('../index');
+var app = require('./setup/app');
 
 var TEST1_FILE_PATH = __dirname + '/fixtures/test1.html';
-
-// Set up testing remote server
-var app = express();
 var server;
-app.get('/default', function (req, res) {
-  
-  res.send({default: true});
-});
-app.get('/js', function (req, res) {
-  
-  res.setHeader('content-type', 'application/javascript');
-  res.send('console.log("javascript")');
-});
-app.get('/html', function (req, res) {
-  
-  res.send('<a href="">link</a>');
-});
-app.get('/css', function (req, res) {
-  
-  res.send('body{}');
-});
-app.get('/json', function (req, res) {
-  
-  res.send({type: 'json'});
-});
 
 var fetching = test('fetching:')
   .beforeEach(function (t) {
@@ -88,7 +65,40 @@ detected.test('json', function (t) {
     }));
 });
 
-fetching.test('default assignment value'); // window.__data (only for js/json stuff)
+detected.test('html', function (t) {
+  
+  fetch({
+    url: 'http://localhost:4321/detected-html'
+  }, function (err, data) {
+    
+    t.equal(data, '<span>detected html</span>', 'parsed as html');
+    t.end();
+  });
+});
+
+fetching.test('json default assignment value: window.__json', function (t) {
+  
+  fetch({
+    url: 'http://localhost:4321/json'
+  }, function (err, data) {
+    
+    t.equal(data, '<script>window.__json = {"type":"json"};</script>', 'injected as json');
+    t.end();
+  });
+});
+
+fetching.test('json', function (t) {
+  
+  fetch({
+    url: 'http://localhost:4321/json',
+    type: 'application/json',
+    assign: 'window.__response'
+  }, function (err, data) {
+    
+    t.equal(data, '<script>window.__response = {"type":"json"};</script>', 'injected as json');
+    t.end();
+  });
+});
 
 fetching.test('javascript', function (t) {
   
@@ -124,19 +134,6 @@ fetching.test('css', function (t) {
   }, function (err, data) {
     
     t.equal(data, '<style>body{}</style>', 'injected as css');
-    t.end();
-  });
-});
-
-fetching.test('json', function (t) {
-  
-  fetch({
-    url: 'http://localhost:4321/json',
-    type: 'application/json',
-    assign: 'window.__response'
-  }, function (err, data) {
-    
-    t.equal(data, '<script>window.__response = {"type":"json"};</script>', 'injected as json');
     t.end();
   });
 });
