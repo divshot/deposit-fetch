@@ -27,8 +27,16 @@ app.get('/html', function (req, res) {
   
   res.send('<a href="">link</a>');
 });
+app.get('/css', function (req, res) {
+  
+  res.send('body{}');
+});
+app.get('/json', function (req, res) {
+  
+  res.send({type: 'json'});
+});
 
-var fetching = test('fetching')
+var fetching = test('fetching:')
   .beforeEach(function (t) {
     
     server = app.listen(4321, function () {
@@ -48,19 +56,18 @@ fetching.test('skip if no url is provided', function (t) {
   
   fetch({}, function (err, data) {
     
-    
     t.ok(err instanceof Error, 'returns error');
     t.equal(err.message, 'Url is required', 'error message');
     t.end();
   });
 });
 
-var detected = fetching.test('detected content type');
+var detected = fetching.test('detected content type:');
 
 detected.test('json', function (t) {
   
   var d = deposit();
-  var expected = '<script> window.__data = {"default":true}</script>';
+  var expected = '<script>window.__data = {"default":true};</script>';
 
   d.injector('fetch', fetch);
 
@@ -109,6 +116,29 @@ fetching.test('html', function (t) {
   });
 });
 
-fetching.test('css');
-fetching.test('json');
+fetching.test('css', function (t) {
+  
+  fetch({
+    url: 'http://localhost:4321/css',
+    type: 'text/css'
+  }, function (err, data) {
+    
+    t.equal(data, '<style>body{}</style>', 'injected as css');
+    t.end();
+  });
+});
+
+fetching.test('json', function (t) {
+  
+  fetch({
+    url: 'http://localhost:4321/json',
+    type: 'application/json',
+    assign: 'window.__response'
+  }, function (err, data) {
+    
+    t.equal(data, '<script>window.__response = {"type":"json"};</script>', 'injected as json');
+    t.end();
+  });
+});
+
 fetching.test('non 2xx status code');
