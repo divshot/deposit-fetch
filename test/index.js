@@ -138,4 +138,16 @@ fetching.test('css', function (t) {
   });
 });
 
-fetching.test('non 2xx status code');
+var statusCodes = fetching.test('response status codes:');
+
+statusCodes.test('4xx returns default content', function (t) {
+  
+  fetch({
+    url: 'http://localhost:4321/not-found',
+    default: 'default content'
+  }, function (err, data) {
+    
+    t.equal(data, 'default content', 'returned default content');
+    t.end();
+  });
+});

@@ -15,7 +15,12 @@ module.exports = function fetch (options, done) {
       return done(err);
     }
     
-    var ext = mime.extension(options.type || response.headers['content-type']);
+    if (response.statusCode >= 400) {
+      return done(null, options.default);
+    }
+    
+    var type = options.type || response.headers['content-type'];
+    var ext = mime.extension(type);
     var data = format[ext](body, options);
     
     done(null, data);
