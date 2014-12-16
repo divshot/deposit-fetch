@@ -1,17 +1,114 @@
-var fetch = require('../index');
+var fs = require('fs');
+
+var test = require('tessed');
 var deposit = require('deposit');
-var Mocksy = require('mocksy');
-var server = new Mocksy({port: 4321});
+var filter = require('through2-filter');
+var split = require('split');
+var concat = require('concat-stream');
+var express = require('express');
 
-var TEST1_FILE_PATH = __dirname + '/fixutres/test1.html';
+var fetch = require('../index');
 
-/*
+var TEST1_FILE_PATH = __dirname + '/fixtures/test1.html';
 
-var d = deposit();
-
-d.injector('fetch', fetch);
-
-d.parse(TEST1_FILE_PATH, function (err, content) {
+// Set up testing remote server
+var app = express();
+var server;
+app.get('/default', function (req, res) {
   
+  res.send({default: true});
 });
- */
+app.get('/js', function (req, res) {
+  
+  res.setHeader('content-type', 'application/javascript');
+  res.send('console.log("javascript")');
+});
+app.get('/html', function (req, res) {
+  
+  res.send('<a href="">link</a>');
+});
+
+var fetching = test('fetching')
+  .beforeEach(function (t) {
+    
+    server = app.listen(4321, function () {
+      
+      t.end();
+    });
+  })
+  .afterEach(function (t) {
+    
+    server.close(function () {
+      
+      t.end();
+    })
+});
+
+fetching.test('skip if no url is provided', function (t) {
+  
+  fetch({}, function (err, data) {
+    
+    
+    t.ok(err instanceof Error, 'returns error');
+    t.equal(err.message, 'Url is required', 'error message');
+    t.end();
+  });
+});
+
+var detected = fetching.test('detected content type');
+
+detected.test('json', function (t) {
+  
+  var d = deposit();
+  var expected = '<script> window.__data = {"default":true}</script>';
+
+  d.injector('fetch', fetch);
+
+  fs.createReadStream(TEST1_FILE_PATH)
+    .pipe(split())
+    .pipe(d.tree())
+    .pipe(d.injectTree())
+    .pipe(filter.obj(function (line) {
+      
+      return line.type === 'block';
+    }))
+    .pipe(concat({object: true}, function (lines) {
+      
+      var block = lines[0];
+      
+      t.equal(block.content.injected, expected, 'injected content');
+      t.end();
+    }));
+});
+
+fetching.test('default assignment value'); // window.__data (only for js/json stuff)
+
+fetching.test('javascript', function (t) {
+  
+  var expected = '<script>console.log("javascript")</script>';
+  
+  fetch({
+    url: 'http://localhost:4321/js',
+    type: 'application/javascript'
+  }, function (err, data) {
+    
+    t.equal(data, expected, 'injected as js');
+    t.end();
+  });
+});
+
+fetching.test('html', function (t) {
+  
+  fetch({
+    url: 'http://localhost:4321/html',
+    type: 'text/html'
+  }, function (err, data) {
+    
+    t.equal(data, '<a href="">link</a>', 'injected as html');
+    t.end();
+  });
+});
+
+fetching.test('css');
+fetching.test('json');
+fetching.test('non 2xx status code');
